@@ -18,7 +18,7 @@ def plot_digit(X, y, idx):
 #load data
 X, y = mnist_data()
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 c = input("What part do you want to test? (A/B/C/D): ")[0]
 
@@ -255,7 +255,7 @@ elif c == "D":
     class CNN10Digits(nn.Module):
         def __init__(self):
             super().__init__()
-            self.inputLayer = nn.Linear(784, 32, bias=True)
+            #self.inputLayer = nn.Linear(784, 64, bias=True)
             self.conv1 = nn.Conv2d(1, 16, 3,padding=1)
             self.conv2 = nn.Conv2d(16, 32, 3,padding=1)
             self.pool = nn.MaxPool2d(2,2)
