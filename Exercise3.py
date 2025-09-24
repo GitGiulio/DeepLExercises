@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from torchsummary import summary
 
 # Download training data from open datasets.
-training_data = datasets.MNIST(
+training_data = datasets.MNIST( #CIFAR10
     root="data",
     train=True,
     download=True,
@@ -46,6 +46,7 @@ for X, y in train_dataloader:
 
     for i in range(6):
         img = X[i].squeeze().numpy()
+        #img = X[i].squeeze().permute(1, 2, 0).numpy()
         axes[i].imshow(img, cmap="gray")
         axes[i].set_title(f"Label: {y[i]}")
         axes[i].axis('off')
@@ -75,7 +76,7 @@ if c == "A":
             super().__init__()
             self.flatten = nn.Flatten()
             self.linear_relu_stack = nn.Sequential(
-                nn.Linear(28 * 28, 512),
+                nn.Linear(32 * 32, 512),
                 nn.ReLU(inplace=True),
                 nn.Linear(512, 512),
                 nn.ReLU(inplace=True),
@@ -102,24 +103,29 @@ elif c == "B":
     class NeuralNetwork(nn.Module):
         def __init__(self):
             super().__init__()
-            self.conv1 = nn.Conv2d(in_channels=1,out_channels=6, kernel_size=5,stride=1,bias=True)
+            self.conv1 = nn.Conv2d(in_channels=1,out_channels=6, kernel_size=(5, 5),stride=1,padding='same',bias=True)
             self.pool = nn.MaxPool2d(2,2)
-            self.conv2 = nn.Conv2d(in_channels=6,out_channels=16, kernel_size=5,stride=1,bias=True)
-            #self.conv3 = nn.Conv2d(out_channels=6, kernel_size=5,stride=1)
+            self.conv2 = nn.Conv2d(in_channels=6,out_channels=16, kernel_size=(5, 5),stride=1,padding='same',bias=True)
+            self.conv3 = nn.Conv2d(in_channels=16,out_channels=32, kernel_size=(5, 5),stride=1,padding='same',bias=True)
+            #self.conv4 = nn.Conv2d(in_channels=32,out_channels=64, kernel_size=(5, 5),stride=1,padding='same',bias=True)
             self.flatten = nn.Flatten()
             self.linear_relu_stack = nn.Sequential(
-                nn.Linear(16 * 4 * 4, 256,bias=True),
+                nn.Linear(288, 256,bias=True),
                 nn.ReLU(inplace=True),
-                nn.Linear(256, 120,bias=True),
+                nn.Linear(256, 128,bias=True),
                 nn.ReLU(inplace=True),
-                nn.Linear(120, 84,bias=True),
+                nn.Linear(128, 64),
                 nn.ReLU(inplace=True),
-                nn.Linear(84, 10,bias=True),
+                nn.Linear(64, 32),
+                nn.ReLU(inplace=True),
+                nn.Linear(32, 10),
             )
 
         def forward(self, x):
             x = self.pool(torch.relu(self.conv1(x)))
             x = self.pool(torch.relu(self.conv2(x)))
+            x = self.pool(torch.relu(self.conv3(x)))
+            #x = self.pool(torch.relu(self.conv4(x)))
             x = self.flatten(x)
             logits = self.linear_relu_stack(x)
             return logits
@@ -131,7 +137,7 @@ elif c == "B":
 
     loss_fn = nn.CrossEntropyLoss()
     #optimizer = torch.optim.SGD(model.parameters(),lr=1e-2)  # Let's use stocastic gradient descent (We will talk about it in the coming weeks)
-    optimizer = torch.optim.Adam(model.parameters(),lr=1e-3,weight_decay=1e-3)  # Let's use stocastic gradient descent (We will talk about it in the coming weeks)
+    optimizer = torch.optim.Adam(model.parameters(),lr= 0.0005,weight_decay=0.0002)  # Let's use stocastic gradient descent (We will talk about it in the coming weeks)
 else:
     raise ValueError
 
@@ -192,7 +198,7 @@ def test(dataloader, model, loss_fn):
 
     print(f"Test Error: \n Avg loss: {test_loss:>8f}, Accuracy: {(100*correct):>0.1f}% \n")
 
-epochs = 15
+epochs = 25
 for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train(train_dataloader, model, loss_fn, optimizer)
